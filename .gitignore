@@ -1,0 +1,28 @@
+# Ignorer le dossier des dépendances
+node_modules/
+
+# Fichiers de logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Variables d'environnement
+.env
+
+# Cache
+.cache/
+dist/
+
+# Ignorer les fichiers de test de build
+coverage/
+build/
+
+# Fichiers spécifiques à l'éditeur ou à l'IDE
+.vscode/
+.idea/
+*.sublime-workspace
+
+# Fichiers système
+.DS_Store
+Thumbs.db
+node_modules
