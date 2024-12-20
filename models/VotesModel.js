@@ -11,7 +11,7 @@ const voteSchema = new mongooz.Schema({
     },
     candidatChoosen:{
         type: String,
-        required: true
+        default: 'indeffirent'
     }
 });
 

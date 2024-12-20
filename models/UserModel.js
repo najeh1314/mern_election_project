@@ -32,12 +32,8 @@ const userSchema = new mongooz.Schema({
         + : un ou plusieurs chiffres.
         $ : fin de la chaîne.
     */
-    createdAt:{
-        type: Date,
-        default: () => Date.now()
-    },
-    password:{
-        type:String,
+   password:{
+       type:String,
         required:[true,"Password is required"],
         minlength:[4,"PAssword too short👌"]
     },
@@ -52,13 +48,17 @@ const userSchema = new mongooz.Schema({
             },
             message: "Invalid email format."
         }
-    }
+    },
     /*
         ^[^\s@]+ : Commence par un ou plusieurs caractères qui ne sont ni un espace ni un @.
         @ : Doit contenir exactement un @.
         [^\s@]+\.[^\s@]+$ : Après le @, il doit y avoir un domaine (comme example.com).
         Cette expression régulière est largement utilisée pour valider les adresses e-mail simples.
-    */  
+    */
+    profile:{
+        profilePhoto: String,
+        description: String,
+    }
 });
 
 // Hash password before saving
