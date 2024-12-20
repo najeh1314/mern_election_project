@@ -1,17 +1,14 @@
 const Vote = require('../models/VotesModel')
 const UserModel = require('../models/UserModel');
+const {admineRole} = require('../utils/AuthUtils')
 
 const adminController = {
     findAllUsers: async (req, res) => {
         try {
-            const currentUser = req.user; // Informations utilisateur issues du token
-            // if (!(req.user && (req.user.role === 'admin' || req.user.role === 'sup-admin'))) {
-            if (!req.user || (req.user.role !== 'admin' && req.user.role !== 'sup-admin')) {
-                    return res.status(403).json({
-                    message: "Log in as admin to have access!",
-                    "You are": currentUser.role
-                });
-            }
+            const adminAuth = admineRole(req.user)
+            if(!adminAuth.authorized)
+                res.status(401).json({message: adminAuth.message, role: adminAuth.role});
+
             const users = await UserModel.find();
             res.status(200).json(users);
         } catch (err) {
@@ -24,14 +21,10 @@ const adminController = {
     },
     deleteUser: async (req, res) => {
         try {
-            //verify if an admin who's connected to allow deletUser action
-            const currentUser = req.user; // Informations utilisateur issues du token
-            if (!(req.user && (req.user.role === 'admin' || req.user.role === 'sup-admin'))) {
-                return res.status(403).json({
-                    message: "Log in as admin to have access!",
-                    "You are": currentUser.role
-                });
-            } 
+            const adminAuth = admineRole(req.user)
+            if(!adminAuth.authorized)
+                res.status(401).json({message: adminAuth.message, role: adminAuth.role});
+
             // Récupérer l'ID de l'utilisateur à supprimer depuis les paramètres
             const userId = req.params.id;
             // Vérifier si l'ID est valide
@@ -64,6 +57,50 @@ const adminController = {
             });
         }
     },
+    updateUser: async (req, res) => {
+        try {
+            // Verification des droits d'administrateur ou super-admin
+            const adminAuth = admineRole(req.user);
+            if (!adminAuth.authorized) {
+                return res.status(401).json({ message: adminAuth.message, role: adminAuth.role });
+            }
+    
+            // Recuperation d'ID de l'utilisateur à mettre à jour depuis les parametres
+            const userId = req.params.id;
+            if (!userId) {
+                return res.status(400).json({ message: "User ID is required." });
+            }
+    
+            // Recuperation des données à mettre à jour depuis le corps de la requête
+            const updateData = req.body;
+    
+            // verif si les données ne sont pas vides
+            if (!Object.keys(updateData).length) {
+                return res.status(400).json({ message: "No data provided for update." });
+            }
+    
+            // Mettre à jour l'utilisateur dans la base de données
+            const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, { new: true });
+            
+            // Vérification si l'utilisateur existe
+            if (!updatedUser) {
+                return res.status(404).json({ message: `User with ID ${userId} not found.` });
+            }
+    
+            // Répondre avec succès
+            res.status(200).json({
+                message: "User successfully updated.",
+                updatedUser
+            });
+        } catch (err) {
+            console.error("Error while updating user:", err);
+            res.status(500).json({
+                message: "Internal server error while updating user.",
+                error: err.message
+            });
+        }
+    }
+    
 
 }
 

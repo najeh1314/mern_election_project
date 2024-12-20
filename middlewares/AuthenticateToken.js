@@ -16,7 +16,6 @@ const authenticateToken = async (req, res, next) => {
         if (!user) {
             return res.status(404).json({ message: 'wrong Token! or, connexion data is expired! Please connect again to continue' });
         }
-
         req.user = user; // Ajoute l'utilisateur complet à `req.user`
         next(); // Passe au middleware suivant ou à la route
     } catch (err) {

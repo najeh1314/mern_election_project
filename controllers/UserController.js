@@ -6,18 +6,25 @@ const userController = {
     register: async (req, res) => {
         try {
             // Vérifier si l'utilisateur existe déjà (par exemple, avec un email unique)
-            const { mail } = req.body; // Supposons que chaque utilisateur a un email unique
-            if(!mail)
-                return res.status(404).json({
-                    message: "email is required."
+            const { mail, cin } = req.body; // Supposons que chaque utilisateur a un email unique
+            if(!mail || !cin)
+                return res.status(400).json({
+                    message: "cin and email are required."
                 });
-            const existingUser = await UserModel.findOne({ mail });
-    
-            if (existingUser) {
+            const existingMail = await UserModel.findOne({ mail }) 
+            const existingCin =  await UserModel.findOne({ cin });
+            if (existingCin) {
                 return res.status(409).json({
-                    message: "Un utilisateur avec cet email existe déjà."
+                    message: "cin is already used."
                 });
             }
+            if (existingMail) {
+                return res.status(409).json({
+                    message: "mail is already used."
+                });
+            }
+
+
     
             // Créer un nouvel utilisateur si aucune duplication n'est trouvée
             const user = await UserModel.create(req.body);
@@ -34,7 +41,6 @@ const userController = {
             });
         }
     },
-    // Connexion
     logIn: async (req, res) => {
         const { mail, password } = req.body;
         try {

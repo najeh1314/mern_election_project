@@ -3,6 +3,7 @@ const connectDB = require('./config/db')
 require('dotenv').config();
 const userRoute = require('./routes/UserRoute');
 const adminRoute = require('./routes/AdminRoute');
+const VoteRoute = require('./routes/VoteRoute');
 
 const app = express();
 
@@ -14,6 +15,7 @@ connectDB();
 // Définir la route utilisateur
 app.use("/users", userRoute);
 app.use("/admin", adminRoute);
+app.use("/votes", VoteRoute);
 
 const port = process.env.port;
 app.listen(port, () => {
