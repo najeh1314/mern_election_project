@@ -5,10 +5,12 @@ const {admineRole} = require('../utils/AuthUtils')
 const adminController = {
     findAllUsers: async (req, res) => {
         try {
+            //Verfier si l'utilisateur connecté est un admin
             const adminAuth = admineRole(req.user)
             if(!adminAuth.authorized)
                 res.status(401).json({message: adminAuth.message, role: adminAuth.role});
 
+            //Recuperer tous les users dans la collection users
             const users = await UserModel.find();
             res.status(200).json(users);
         } catch (err) {
@@ -21,6 +23,7 @@ const adminController = {
     },
     deleteUser: async (req, res) => {
         try {
+            //Verfier si l'utilisateur connecté est un admin            
             const adminAuth = admineRole(req.user)
             if(!adminAuth.authorized)
                 res.status(401).json({message: adminAuth.message, role: adminAuth.role});
@@ -57,7 +60,7 @@ const adminController = {
             });
         }
     },
-    updateUser: async (req, res) => {
+    updateUserRole: async (req, res) => {
         try {
             // Verification des droits d'administrateur ou super-admin
             const adminAuth = admineRole(req.user);
@@ -65,32 +68,34 @@ const adminController = {
                 return res.status(401).json({ message: adminAuth.message, role: adminAuth.role });
             }
     
-            // Recuperation d'ID de l'utilisateur à mettre à jour depuis les parametres
+            // Recuperation d'ID de l'utilisateur à mettre à jour son role depuis les parametres
             const userId = req.params.id;
             if (!userId) {
                 return res.status(400).json({ message: "User ID is required." });
             }
-    
-            // Recuperation des données à mettre à jour depuis le corps de la requête
-            const updateData = req.body;
-    
-            // verif si les données ne sont pas vides
-            if (!Object.keys(updateData).length) {
-                return res.status(400).json({ message: "No data provided for update." });
-            }
-    
-            // Mettre à jour l'utilisateur dans la base de données
-            const updatedUser = await UserModel.findByIdAndUpdate(userId, updateData, { new: true });
-            
-            // Vérification si l'utilisateur existe
-            if (!updatedUser) {
+            // Vérifier si l'utilisateur existe dans la base de données
+            const userToUpdate = await UserModel.findById(userId);
+            if (!userToUpdate) {
                 return res.status(404).json({ message: `User with ID ${userId} not found.` });
             }
+    
+            // Recuperation des données à mettre à jour depuis le corps de la requête
+            const {role: newRole} = req.body;
+    
+            // verif si les données ne sont pas vides
+            const roles =['admin', 'candidat', 'voter', 'citizen'];
+            if (!newRole || !roles.includes(newRole)) {
+                return res.status(400).json({ message: "No valide role provided for new update." });
+            }
+    
+            // Mise à jour du rôle de l'utilisateur
+            userToUpdate.role = newRole;
+            await userToUpdate.save();
     
             // Répondre avec succès
             res.status(200).json({
                 message: "User successfully updated.",
-                updatedUser
+                userToUpdate
             });
         } catch (err) {
             console.error("Error while updating user:", err);

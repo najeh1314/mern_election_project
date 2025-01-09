@@ -1,10 +1,13 @@
 const express = require("express");
-const connectDB = require('./config/db')
+const connectDB = require('./config/db');
+const cors = require('cors');
+
 require('dotenv').config();
 const userRoute = require('./routes/UserRoute');
 const adminRoute = require('./routes/AdminRoute');
 
 const app = express();
+app.use(cors({ origin: 'http://localhost:4200' }));
 
 // Middleware pour analyser les requêtes JSON
 app.use(express.json());

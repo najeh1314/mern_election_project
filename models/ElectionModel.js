@@ -3,8 +3,7 @@ const UserModel = require('../models/UserModel')
 
 const electionSchema = new mongooz.Schema({
    dateElection:{
-        type: Date,
-        default: () => Date.now()
+        type: String
     },
     typeElection:{
         type: String,
@@ -12,10 +11,9 @@ const electionSchema = new mongooz.Schema({
         default: 'Parliamentary'
     },
     candidates: [{
-        type: mongooz.Schema.Types.ObjectId,  // Define this as an array of ObjectId references
-        ref: 'User',  // Refers to the `User` model
-        required: true,
-        minlength: [2, "There should be more than one candidate in the list👌"]
+            name:String,
+            img: String,
+            plane: String       
     }]
 
 });

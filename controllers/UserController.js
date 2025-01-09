@@ -1,5 +1,6 @@
 const UserModel = require("../models/UserModel");
 const CommentModel = require("../models/CommentModel")
+const ElectionModel = require("../models/ElectionModel")
 const VoteModel = require("../models/VotesModel")
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -104,7 +105,7 @@ const userController = {
                 return res.status(404).json({ message: `User with ID ${currentUserId} not found.` });
             }
             if (currentUser.role !== 'voter') {
-                return res.status(203).json({ message: `${currentUser.role} are not allowed to vote.` });
+                return res.status(400).json({ message: `${currentUser.role} are not allowed to vote. verify if you  are validated as a voter by admin` });
             }
             
             // 3. Vérifier que les données de l'élection et du candidat sont présentes
@@ -225,10 +226,121 @@ const userController = {
 
     },
     getAllCondidate: async(req, res) =>{
-
-    }
-     
+        try {
+            const candidatList = await UserModel.find({role: 'candidat'});
+            res.status(200).json(candidatList);
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).json({
+                message: "Erreur lors de la récupération des utilisateurs.",
+                error: err.message
+         });
+        }
+    },
+    getProfile: async(req, res) =>{
+        try{
+            // 1. Vérifier si l'utilisateur est authentifié
+            if (!req.user || !req.user.id) {
+                return res.status(400).json({ message: "Invalid Token, session expired. Please log in again!" });
+            }
+            // 2. Recupere l'id de l'utilisateur courant
+            const { id: currentUserId } = req.user;
+            // 3. Recuppère l'utilisateur depuis la BD
+            const currentUser = await UserModel.findById(currentUserId);
+            if (!currentUser) {
+                return res.status(404).json({ message: `User with ID ${currentUserId} not found.` });
+            }
+            res.status(200).json(currentUser);            
+        }
+        catch (err) {
+            console.error(err.message);
+            res.status(500).json({
+                message: "Erreur lors de la récupération du profile de l'utilisateur en cours.",
+                error: err.message
+            });
+        }
+    },
+    getElection: async (req, res) => {
+        try {
+            // Récupérer l'ID de l'élection depuis les paramètres de la requête
+            const {dateElection, typeElection} = req.body; 
+            // Vérifier si les paramètres sont valides
+            if (!dateElection || !typeElection) {
+                return res.status(400).json({ message: 'Date and type of election are required.' });
+            }
+        // Récupérer l'élection correspondante dans la base de données
+        const results = await ElectionModel.findOne({
+            dateElection: dateElection,
+            typeElection: typeElection
+        });
     
+            // Si aucun résultat n'est trouvé, retournez un tableau vide
+            if (!results) {
+                return res.status(200).json({ results: [], dtae: dateElection, type: typeElection });
+
+            }
+            //Répondre avec les résultats
+            return res.status(200).json(results );
+        } catch (err) {
+            console.error("Error while getting election choosen:", err);
+            return res.status(500).json({ message: "Internal Server Error.", error: err.message });
+        }
+    },
+    getElections: async(req, res) =>{
+        try {
+            const elections = await ElectionModel.find();
+            res.status(200).json(elections);
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).json({
+                message: "Erreur lors de la récupération des elections.",
+                error: err.message
+         });
+        }
+    }, 
+    updateProfile: async(req, res) =>{
+        try{
+            //1. Vérifier si l'utilisateur est authentifié
+            if (!req.user || !req.user.id) {
+                return res.status(400).json({ message: "Invalid Token, session expired. Please log in again!" });
+            }
+            // 2. Récupérer l'ID de l'utilisateur courant
+            const userId = req.user.id;
+
+            // 3. Récupérer l'utilisateur courant dans la base de données
+            const currentUser = await UserModel.findById(userId);
+            if (!currentUser) {
+                return res.status(404).json({ message: `User with ID ${userId} not found.` });
+            }
+
+            // 4. Récupérer les nouvelles données à mettre à jour
+            const updatedData = req.body;
+
+            // 5. Mettre à jour l'utilisateur courant
+            Object.keys(updatedData).forEach((key) => {
+                currentUser[key] = updatedData[key];
+            });
+
+            // 6. Sauvegarder l'utilisateur mis à jour dans la base de données
+            await currentUser.save();
+
+            // 7. Retourner une réponse avec les nouvelles informations de l'utilisateur
+            return res.status(200).json({
+                message: "User profile updated successfully.",
+                user: currentUser
+            });
+
+    } catch (err) {
+        console.error("Erreur lors de la modification du profil de l'utilisateur :", err);
+        res.status(500).json({
+            message: "Server internal error while updating user.",
+            error: err.message
+        });
+    }
+
+
+
+    }  
 };
 
 module.exports = userController;

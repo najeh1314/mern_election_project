@@ -6,6 +6,7 @@ const adminController = require("../controllers/AdminController");
 
 router.get('/all-users', authenticateToken, checkAdmin, adminController.findAllUsers);
 router.delete('/delete-user/:id', authenticateToken, checkAdmin, adminController.deleteUser);
+router.put('/update-role/:id', authenticateToken, checkAdmin, adminController.updateUserRole);
 
 
 module.exports = router;
